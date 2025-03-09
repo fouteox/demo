@@ -1,0 +1,9 @@
+name: redis
+repository: fouteox/ddev-redis
+version: 0.0.1
+install_date: "2025-03-09T19:16:54+01:00"
+project_files:
+    - commands/redis/redis-cli
+    - docker-compose.redis.yaml
+global_files: []
+removal_actions: []

@@ -1,0 +1,8 @@
+name: laravel-queue
+repository: fouteox/ddev-laravel-queue
+version: 0.0.1
+install_date: "2025-03-09T19:16:55+01:00"
+project_files:
+    - config.laravel-queue.yaml
+global_files: []
+removal_actions: []

@@ -1,0 +1,8 @@
+name: laravel-prepare
+repository: fouteox/ddev-laravel-prepare
+version: 0.0.1
+install_date: "2025-03-09T19:17:10+01:00"
+project_files:
+    - commands/host/prepare
+global_files: []
+removal_actions: []
