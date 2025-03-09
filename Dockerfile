@@ -47,7 +47,7 @@ WORKDIR ${ROOT}
 
 COPY --link package.json bun.lock* ./
 
-RUN npm install
+RUN bun install
 
 COPY --link . .
 COPY --link --from=common ${ROOT}/vendor vendor
