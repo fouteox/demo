@@ -1,0 +1,103 @@
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: 50m
+    max-file: 6
+x-network: &default-network
+  - internal
+x-base: &base
+  image: '${IMAGE_NAME:-app}:latest'
+  user: '${HOST_UID:-1000}:${HOST_GID:-1000}'
+  ulimits:
+    nofile:
+      soft: 20000
+      hard: 40000
+  security_opt:
+    - 'no-new-privileges:true'
+  volumes:
+    - 'app_public:/app/storage/app/public'
+    - 'app_logs:/app/storage/logs'
+    - 'app_cache:/app/bootstrap/cache'
+    - 'sqlite:/app/database/database'
+  logging:
+    driver: json-file
+    options:
+      max-size: 50m
+      max-file: 6
+  restart: always
+  depends_on:
+    redis:
+      condition: service_healthy
+services:
+  app:
+    <<: *base
+    build:
+      args:
+        APP_ENV: production
+        WWWUSER: '${HOST_UID:-1000}'
+        WWWGROUP: '${HOST_GID:-1000}'
+        TARGETARCH: '${HOST_ARCH:-amd64}'
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - '--fail'
+        - 'localhost:80/up'
+      start_period: 5s
+      interval: 10s
+      retries: 12
+    environment:
+      INERTIA_SSR: false
+      SERVER_NAME: ':80'
+    networks:
+      - internal
+      - web
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.gitlab-https.rule=Host(`__URL_REFERENCE__`)
+      - traefik.http.routers.gitlab-https.entrypoints=web
+      - traefik.http.services.gitlab-service.loadbalancer.server.port=80
+  worker:
+    <<: *base
+    environment:
+      CONTAINER_MODE: worker
+    networks: *default-network
+    depends_on:
+      app:
+        condition: service_healthy
+  redis:
+    image: 'redis:7.4'
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - ping
+      retries: 3
+      timeout: 5s
+    ulimits:
+      nofile:
+        soft: 20000
+        hard: 40000
+    command:
+      - redis-server
+      - '--appendonly'
+      - 'yes'
+      - '--requirepass '
+      - '${REDIS_PASSWORD}'
+    security_opt:
+      - 'no-new-privileges:true'
+    volumes:
+      - 'stack-redis:/data'
+    networks: *default-network
+    restart: always
+    logging: *default-logging
+networks:
+  internal: null
+  web:
+    external: true
+volumes:
+  app_public: null
+  app_logs: null
+  app_cache: null
+  stack-redis: null
+  sqlite: null
